@@ -5,7 +5,7 @@ from keyboards import get_main_keyboard
 
 router = Router()
 
-@router.message(F.text == "⚙️ Настройки")
+@router.message(F.text.contains("Настройки"))
 async def show_settings(message: Message):
     """Показать настройки"""
     await message.answer(
