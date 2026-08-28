@@ -9,7 +9,7 @@ from config import BOT_TOKEN
 router = Router()
 bot = Bot(token=BOT_TOKEN)
 
-@router.message(F.text == "Поиск")
+@router.message(F.text.contains("Поиск"))
 async def start_search(message: Message, state: FSMContext):
     """Начало поиска пары"""
     user = await get_user(message.from_user.id)
