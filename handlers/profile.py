@@ -14,8 +14,10 @@ async def show_my_profile(message: Message):
         await message.answer("Сначала зарегистрируйся через /start")
         return
     
+    # user: 0:user_id, 1:name, 2:age, 3:gender, 4:course, 5:faculty, 6:description, 7:photo_id, 8:is_active
+    
     gender_ru = "Парень" if user[3] == "male" else "Девушка"
-    course_text = f"{user[4]} курс" if user[4].isdigit() else user[4]
+    course_text = f"{user[4]} курс" if str(user[4]).isdigit() else user[4]
     
     text = (
         f"👤 **Твоя анкета**\n\n"
@@ -27,7 +29,11 @@ async def show_my_profile(message: Message):
         f"💬 О себе: {user[6]}"
     )
     
-    if user[7]:
-        await message.answer_photo(user[7], caption=text, parse_mode="Markdown")
+    if user[7]:  # Если есть фото
+        await message.answer_photo(
+            user[7],
+            caption=text,
+            parse_mode="Markdown"
+        )
     else:
         await message.answer(text, parse_mode="Markdown")
