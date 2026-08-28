@@ -2,21 +2,41 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from database import add_complaint
 
 router = Router()
 
-class CompState(StatesGroup):
-    reason = State()
-
 @router.callback_query(F.data.startswith("comp_reason_"))
-async def process_complaint(callback: CallbackQuery, state: FSMContext):
-    # data выглядит как comp_reason_12345_spam
+async def process_complaint_reason(callback: CallbackQuery, state: FSMContext):
+    """Обработка выбора причины жалобы"""
+    # Данные выглядят как: comp_reason_12345_spam
     parts = callback.data.split("_")
-    to_id = int(parts[2])
-    reason = parts[3]
     
-    await add_complaint(callback.from_user.id, to_id, reason)
-    await callback.message.edit_text("⚠️ Жалоба отправлена администратору. Спасибо за бдительность!")
+    if len(parts) < 4:
+        await callback.answer("❌ Ошибка. Попробуй ещё раз.", show_alert=True)
+        return
+    
+    to_user_id = int(parts[2])
+    reason_code = parts[3]
+    
+    # Расшифровываем причину
+    reasons = {
+        "spam": "Спам/реклама",
+        "insult": "Оскорбления/неадекватное поведение",
+        "photo": "Неподходящее фото"
+    }
+    
+    reason_text = reasons.get(reason_code, "Другая причина")
+    
+    # Добавляем жалобу в базу
+    await add_complaint(callback.from_user.id, to_user_id, reason_text)
+    
+    await callback.message.edit_text(
+        "✅ **Жалоба отправлена!**\n\n"
+        f"Причина: {reason_text}\n\n"
+        "Администратор рассмотрит её в ближайшее время.\n"
+        "Спасибо за помощь в поддержании порядка! 👍",
+        parse_mode="Markdown"
+    )
+    
     await state.clear()
