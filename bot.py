@@ -11,25 +11,30 @@ from database import init_db
 from handlers import registration, matching, complaints, admin
 
 async def on_startup(app):
+    """Инициализация при запуске веб-сервера"""
     await init_db()
     print("✅ База данных инициализирована!")
 
 async def start_bot(bot: Bot):
+    """Запуск Telegram бота"""
     dp = Dispatcher(storage=MemoryStorage())
     
-    # Подключаем обработчики
+    # Подключаем все обработчики
     dp.include_router(registration.router)
     dp.include_router(matching.router)
     dp.include_router(complaints.router)
     dp.include_router(admin.router)
     
     print("🤖 Telegram бот запущен и ждёт сообщений...")
+    
+    # Запускаем polling с отключением webhook (на всякий случай)
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
     
-    # Создаем простой веб-сервер, чтобы Render.com не "усыплял" бота
+    # Создаем простой веб-сервер для Render.com
     app = web.Application()
     app.on_startup.append(on_startup)
     
@@ -43,9 +48,9 @@ async def main():
     port = int(os.environ.get("PORT", 8080))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
-    print(f"🌐 Веб-сервер запущен на порту {port} (для Render.com)")
+    print(f"🌐 Веб-сервер запущен на порту {port}")
     
-    # Запускаем бота параллельно с веб-сервером
+    # Запускаем бота
     await start_bot(bot)
 
 if __name__ == "__main__":
